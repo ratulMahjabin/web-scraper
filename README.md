@@ -23,4 +23,4 @@ Steps:
     
     3 == Collect all of a user's public posts and save them to a file.
     
-    note: use py3 if multiple python2 and python3 is install in the system
+    note: use py3 if multiple python instances (python2 and python3) are installed in the system
