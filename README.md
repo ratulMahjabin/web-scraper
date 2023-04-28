@@ -1,4 +1,4 @@
-# web-scraper
+# web-scraper-python
 WebINT technology that can scrape data from Facebook
 
 There are two methods of scraping data from facebook.
