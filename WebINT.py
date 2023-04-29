@@ -1,5 +1,6 @@
 import sys
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,6 +11,7 @@ from config import username, password
 import re
 from bs4 import BeautifulSoup
 import csv
+import os, requests
 
 
 class Scrapper:
@@ -95,14 +97,53 @@ class Scrapper:
                 writer.writerow([element])
         print("Successfully all the profiles have been saved into a csv")
 
+    def collect_images_and_save(self, user_id):
+        self.driver.get(f"https://www.facebook.com/{user_id}/photos/")
+        time.sleep(4)
+
+        try:
+            image_links = self.driver.find_element(By.XPATH,
+                                                   value='/html/body/div[1]/div/div[1]/div/div[3]/div/div/div/div[1]/div['
+                                                         '1]/div/div/div[4]/div[2]/div/div[1]/div/div['
+                                                         '2]/div/div/div/div/div/div[2]/div/div')
+            html = image_links.get_attribute('outerHTML')
+
+            # Parse the HTML using BeautifulSoup
+            soup = BeautifulSoup(html, 'html.parser')
+
+            # Find all the img tags
+            img_tags = soup.find_all('img')
+
+            if len(img_tags) > 0:
+                # Create a directory to save the images
+                os.makedirs('images', exist_ok=True)
+
+                # Iterate through the img_tags and download the images
+                for i, img_tag in enumerate(img_tags):
+                    src = img_tag['src']
+                    src = src.strip().replace('\n', '')
+                    # Download the image
+                    response = requests.get(src)
+
+                    # Save the image to the images folder
+                    with open(f'images/image_{i}.jpg', 'wb') as f:
+                        f.write(response.content)
+
+                print("Images have been downloaded and saved.")
+            else:
+                print("This profile has no public photo or access to this profile's photo page")
+
+        except NoSuchElementException:
+            print("XPath not found.")
+
 
 if __name__ == "__main__":
     scraper = Scrapper()
-    scraper.login(username, password)
-    # scraper.collect_profile_and_save("Ratul")
-    # scraper.collect_posts_and_save('alan.turing118')
+    # scraper.login(username, password)
+    # scraper.collect_images_and_save("Ratul") #working example
+    #scraper.collect_images_and_save("Sadia")  # Non-working example
 
-    # # Argument from command line
+    # # # Argument from command line
     func = sys.argv[1]
     arg1 = sys.argv[2]
 
@@ -110,3 +151,5 @@ if __name__ == "__main__":
         scraper.collect_profile_and_save(arg1)
     if func == "3":
         scraper.collect_posts_and_save(arg1)
+    if func == "4":
+        scraper.collect_images_and_save(arg1)
